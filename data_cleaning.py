@@ -24,12 +24,18 @@ min_hr = minus_k.apply(lambda x: x.lower().replace('per hour', '').replace('empl
 
 df['min_salary'] = min_hr.apply(lambda x: int(x.split('-')[0]))
 df['max_salary'] = min_hr.apply(lambda x: int(x.split('-')[1].replace(" ", "")))
+
+# hourly wage to annual
+df['min_salary'] = df.apply(lambda x: x.min_salary*2.08 if x.hourly == 1 else x.min_salary, axis = 1)
+df['max_salary'] = df.apply(lambda x: x.max_salary*2.08 if x.hourly == 1 else x.max_salary, axis = 1)
+
 df['avg_salary'] = (df.min_salary + df.max_salary) / 2
 
 df = df.dropna(subset = ['min_salary'])
 
+
 # Company Name text only
-df['company_txt'] = df.apply(lambda x: x['Company Name'] if x['Rating'] < 0 else x['Company Name'][:-3], axis = 1)
+df['company_txt'] = df.apply(lambda x: x['Company Name'].replace('\n', '') if x['Rating'] < 0 else x['Company Name'][:-3].replace('\n', ''), axis = 1)
 
 # state field
 df['job_state'] = df['Location'].apply(lambda x: x.split(',')[1])
@@ -37,7 +43,7 @@ df['job_state'] = df['job_state'].apply(lambda x: x.upper().replace('LOS ANGELES
 
 df.job_state.value_counts()
 
-df['job&hq_same_state'] = df.apply(lambda x: 1 if x.Location == x.Headquarters else 0, axis = 1)
+df['hq_same_state'] = df.apply(lambda x: 1 if x.Location == x.Headquarters else 0, axis = 1)
 
 # age of company
 df['company_age'] = df.Founded.apply(lambda x: x if x <1 else 2020 -x)
@@ -57,29 +63,37 @@ df['java'] = df['Job Description'].apply(lambda x: 1 if 'java' in x.lower() else
 df['dsp'] = df['Job Description'].apply(lambda x: 1 if 'signal processing' in x.lower() else 0)
 # power
 df['power'] = df['Job Description'].apply(lambda x: 1 if 'power' in x.lower() else 0)
+
+# Embedded System
+df['Embedded_System'] = df['Job Description'].apply(lambda x: 1 if 'embedded' in x.lower() else 0)
+
 # machine learning
 df['ML'] = df['Job Description'].apply(lambda x: 1 if 'machine learning' in x.lower() or 'deep learning' in x.lower()
                                        or 'neural network' in x.lower() or 'rnn' in x.lower() 
                                        or 'cnn' in x.lower() or 'lstm' in x.lower() or 'artificial intelligence' in x.lower() else 0)
-# entry lvl
-df['entry_lvl'] = df['Job Title'].apply(lambda x: 1 if 'entry' in x.lower() or 'associate' in x.lower() else 0)
-df['entry_lvl1'] = df['Job Description'].apply(lambda x: 1 if 'entry' in x.lower() else 0)
-df['entry_lvl'] = (df.entry_lvl + df.entry_lvl1).apply(lambda x: 1 if x> 0 else 0)
+# Position Senority
+def seniority(title):
+    if 'sr' in title.lower() or 'sr.' in title.lower() or 'manager'in title.lower() or 'senior' in title.lower() or 'lead' in title.lower() or 'principal' in title.lower():
+        return 'senior'
+    elif 'jr' in title.lower() or 'jr.' in title.lower() or 'junior' in title.lower():
+        return 'junior'
+    elif 'entry' in title.lower() or 'associate' in title.lower():
+        return 'entry'
+    else:
+        return 'na'
+df['seniority'] = df['Job Title'].apply(seniority)
 
-# senior_lvl
-df['senior_lvl'] = df['Job Title'].apply(lambda x: 1 if 'senior' in x.lower() or 'sr.' in x.lower() 
-                                         or 'sr' in x.lower() or 'principal' in x.lower()
-                                         or 'manager' in x.lower() else 0)
 
-df['senior_lvl1'] = df['Job Description'].apply(lambda x: 1 if 'senior' in x.lower() or 'principal' in x.lower()  else 0)
-df['senior_lvl'] = (df.senior_lvl + df.senior_lvl1).apply(lambda x: 1 if x> 0 else 0)
+# Job description length
+df['desc_len'] = df['Job Description'].apply(lambda x: len(x))
 
-# Delete
-del df['senior_lvl1']
-del df['entry_lvl1'] 
+
+# Competitor count
+df['Num_Competitors'] = df['Competitors'].apply(lambda x: len(x.split(',')) if x != '-1' else 0)
+
 
 df.to_csv('salary_data_cleaned.csv', index = False)
-
+df1 = pd.read_csv('salary_data_cleaned.csv')
 
 # Count
 df.python.value_counts()
@@ -90,5 +104,4 @@ df.java.value_counts()
 df.dsp.value_counts()
 df.power.value_counts()
 df.ML.value_counts()
-df.entry_lvl.value_counts()
-df.senior_lvl.value_counts()
+df.seniority.value_counts()

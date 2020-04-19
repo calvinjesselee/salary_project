@@ -12,5 +12,5 @@ import pandas as pd
 
 path = "/home/calvinlee/Documents/salary_project/chromedriver"
 slp_time = 5
-df = gs.get_jobs('electrical engineer', 10000,False, path, slp_time)
+df = gs.get_jobs('electrical engineering', 1000,False, path, slp_time)
 df.to_csv('glassdoor_jobs.csv', index = False)
