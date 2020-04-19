@@ -55,7 +55,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
 
         
         #Going through each job in this page
-        job_buttons = driver.find_elements_by_class_name("jl")  #jl for Job Listing. These are the buttons we're going to click.
+        job_buttons = driver.find_elements_by_class_name("jobContainer")  #jl for Job Listing. These are the buttons we're going to click.
         for job_button in job_buttons:  
 
             print("Progress: {}".format("" + str(len(jobs)) + "/" + str(num_jobs)))
@@ -63,7 +63,7 @@ def get_jobs(keyword, num_jobs, verbose, path, slp_time):
                 break
 
             job_button.click()  #You might 
-            time.sleep(2)
+            time.sleep(1)
             collected_successfully = False
             
             while not collected_successfully:
